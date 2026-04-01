@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Blog": {
+      "title": "Blog Post",
+      "description": "A blog post on the website.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "The title of the blog post." },
+        "content": { "type": "string", "description": "The content of the blog post." },
+        "excerpt": { "type": "string", "description": "A short summary of the blog post." },
+        "category": { "type": "string", "description": "The category of the blog post." },
+        "image": { "type": "string", "description": "URL of the cover image." },
+        "author": { "type": "string", "description": "The author of the post." },
+        "date": { "type": "string", "format": "date-time", "description": "The publication date." },
+        "published": { "type": "boolean", "description": "Whether the post is published." }
+      },
+      "required": ["title", "content", "category", "image", "date"]
+    },
+    "Trip": {
+      "title": "Trip Plan",
+      "description": "A saved trip plan for a user.",
+      "type": "object",
+      "properties": {
+        "destination": { "type": "string", "description": "The destination of the trip." },
+        "userId": { "type": "string", "description": "The ID of the user who owns the trip." },
+        "startDate": { "type": "string", "description": "The start date of the trip." },
+        "endDate": { "type": "string", "description": "The end date of the trip." },
+        "days": { "type": "integer", "description": "The number of days for the trip." },
+        "style": { "type": "string", "description": "The travel style (e.g., Budget, Luxury)." },
+        "image": { "type": "string", "description": "URL of a representative image for the trip." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the trip was created." }
+      },
+      "required": ["destination", "userId", "createdAt"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Additional details for a user.",
+      "type": "object",
+      "properties": {
+        "bio": { "type": "string", "description": "A short bio of the user." },
+        "location": { "type": "string", "description": "The user's location." },
+        "website": { "type": "string", "description": "The user's personal website." },
+        "interests": { "type": "array", "items": { "type": "string" }, "description": "A list of travel interests." }
+      }
+    }
+  },
+  "firestore": {
+    "/blogs": {
+      "schema": "Blog",
+      "description": "Collection of blog posts."
+    },
+    "/users/{userId}/profile": {
+      "schema": "UserProfile",
+      "description": "User-specific profile details."
+    },
+    "/trips": {
+      "schema": "Trip",
+      "description": "Collection of user-saved trip plans."
+    }
+  }
+}

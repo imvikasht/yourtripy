@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: blogs
+    // Fields:
+    //   - title: string (required)
+    //   - content: string (required)
+    //   - excerpt: string
+    //   - category: string (required)
+    //   - image: string (required)
+    //   - author: string
+    //   - date: timestamp (required)
+    //   - published: bool
+    //
+    // ===============================================================
+
+    // Collection: users/{userId}/profile
+    // Fields:
+    //   - bio: string
+    //   - location: string
+    //   - website: string
+    //   - interests: list
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "iritvik3@gmail.com");
+    }
+
+    function isValidBlog(data) {
+      return data.keys().hasAll(['title', 'content', 'category', 'image', 'date']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.content is string && data.content.size() > 0 &&
+             data.category is string &&
+             data.image is string &&
+             data.date is timestamp &&
+             (!('published' in data) || data.published is bool) &&
+             (!('author' in data) || (data.author is string && data.author.size() < 100)) &&
+             (!('excerpt' in data) || (data.excerpt is string && data.excerpt.size() < 500));
+    }
+
+    function isValidProfile(data) {
+      return (!('bio' in data) || (data.bio is string && data.bio.size() < 500)) &&
+             (!('location' in data) || (data.location is string && data.location.size() < 100)) &&
+             (!('website' in data) || (data.website is string && data.website.size() < 200)) &&
+             (!('interests' in data) || (data.interests is list && data.interests.size() < 20));
+    }
+
+    function isValidTrip(data) {
+      return data.keys().hasAll(['destination', 'userId']) &&
+             data.destination is string && data.destination.size() > 0 &&
+             data.userId == request.auth.uid &&
+             (!('createdAt' in data) || data.createdAt is timestamp) &&
+             (!('updatedAt' in data) || data.updatedAt is timestamp);
+    }
+
+    match /blogs/{blogId} {
+      allow read: if resource.data.published == true || isAdmin() || (isAuthenticated() && resource.data.authorId == request.auth.uid);
+      allow create: if isAuthenticated() && isValidBlog(request.resource.data);
+      allow update, delete: if isAdmin() || (isAuthenticated() && resource.data.authorId == request.auth.uid);
+    }
+
+    match /trips/{tripId} {
+      allow read, delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidTrip(request.resource.data) && ('createdAt' in request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && 
+                    isValidTrip(request.resource.data) &&
+                    request.resource.data.createdAt == resource.data.createdAt;
+    }
+
+    match /users/{userId}/profile/{profileId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId) && isValidProfile(request.resource.data);
+      allow delete: if isOwner(userId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "YourTripy - AI Trip Co-pilot",
+  "description": "A premium AI-powered trip planning platform where the user stays in control. The AI acts as your expert co-pilot for a truly personalized travel experience.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
