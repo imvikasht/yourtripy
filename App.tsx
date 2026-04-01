@@ -44,20 +44,22 @@ const App: React.FC = () => {
     // Standardize to Light theme
     document.documentElement.classList.remove('dark');
     
-    // Handle initial hash and hash changes
-    const handleHashChange = () => {
-      const hashStr = window.location.hash.replace('#', '');
+    // Handle initial path and popstate (browser back/forward)
+    const handlePathChange = () => {
+      const pathStr = window.location.pathname.replace(/^\/+/, '');
       const validViews: ViewType[] = ['home', 'how-it-works', 'features', 'blog', 'guidebooks', 'community', 'support', 'about', 'privacy', 'terms', 'contact', 'planner', 'login', 'signup', 'admin', 'profile', 'trips'];
       
-      if (!hashStr || hashStr === '') {
+      if (!pathStr || pathStr === '') {
         setView('home');
-      } else if (validViews.includes(hashStr as ViewType)) {
-        setView(hashStr as ViewType);
+      } else if (validViews.includes(pathStr as ViewType)) {
+        setView(pathStr as ViewType);
+      } else {
+        setView('home');
       }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    handleHashChange(); // Check on mount
+    window.addEventListener('popstate', handlePathChange);
+    handlePathChange(); // Check on mount
 
     // Firebase Auth session check
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -74,7 +76,7 @@ const App: React.FC = () => {
 
     return () => {
       unsubscribe();
-      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handlePathChange);
     };
   }, []);
 
@@ -86,7 +88,10 @@ const App: React.FC = () => {
     setSearchQuery(query);
     setSelectedTripId(tripId);
     setView(newView);
-    window.location.hash = newView;
+    const newPath = newView === 'home' ? '/' : `/${newView}`;
+    if (window.location.pathname !== newPath) {
+      window.history.pushState({}, '', newPath);
+    }
     window.scrollTo(0, 0);
   };
 
